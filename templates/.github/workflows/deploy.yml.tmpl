@@ -80,9 +80,9 @@ jobs:
               # ###BEGIN_GITHUB_WEBHOOK###
               printf 'GITHUB_WEBHOOK_SECRET=%s\n' "$WEBHOOK_SECRET"
               # ###END_GITHUB_WEBHOOK###
-            } > "$ENV_FILE"
-            chmod 644 "$ENV_FILE"
-            sudo chown 10000:10000 "$ENV_FILE" 2>/dev/null || true
+            } | sudo tee "$ENV_FILE" > /dev/null
+            sudo chmod 644 "$ENV_FILE"
+            sudo chown 10000:10000 "$ENV_FILE"
 
             echo "=== [3/5] Pulling latest Hermes image ==="
             docker compose pull
