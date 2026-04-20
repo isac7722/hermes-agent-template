@@ -132,6 +132,85 @@ collect_agent_info() {
   fi
 }
 
+# ── Platform setup guides ──────────────────────────────────────────────────────
+guide_box() {
+  local title="$1"
+  local width=56
+  local pad=$(( (width - ${#title}) / 2 ))
+  echo ""
+  echo -e "  ${BLUE}$(printf '─%.0s' {1..56})${NC}"
+  printf "  ${BLUE}%${pad}s${BOLD}%s${NC}${BLUE}%${pad}s${NC}\n" "" "$title" ""
+  echo -e "  ${BLUE}$(printf '─%.0s' {1..56})${NC}"
+  echo ""
+}
+
+guide_slack() {
+  guide_box "Slack App 설정 가이드"
+  echo -e "  ${BOLD}1.${NC} https://api.slack.com/apps → Create New App → From scratch"
+  echo -e "  ${BOLD}2.${NC} 앱 이름 입력 → workspace 선택"
+  echo -e "  ${BOLD}3.${NC} Features → Socket Mode → Enable"
+  echo -e "     App-Level Token 생성 (scope: connections:write) → 복사"
+  echo -e "     ${BLUE}→ 이것이 SLACK_APP_TOKEN (xapp-...)${NC}"
+  echo -e "  ${BOLD}4.${NC} OAuth & Permissions → Bot Token Scopes 추가:"
+  echo -e "     chat:write  im:history  channels:history  app_mentions:read"
+  echo -e "  ${BOLD}5.${NC} Install to Workspace → Bot User OAuth Token (xoxb-...) 복사"
+  echo -e "     ${BLUE}→ 이것이 SLACK_BOT_TOKEN${NC}"
+  echo -e "  ${BOLD}6.${NC} App Home → Messages 탭에서 DM 허용 체크"
+  echo -e "  ${BOLD}7.${NC} User ID 확인: Slack → 프로필 → ⋮ → 멤버 ID 복사"
+  echo ""
+  printf "  준비됐으면 Enter 눌러 계속..."; IFS= read -r _
+}
+
+guide_discord() {
+  guide_box "Discord Bot 설정 가이드"
+  echo -e "  ${BOLD}1.${NC} https://discord.com/developers/applications → New Application"
+  echo -e "  ${BOLD}2.${NC} Bot 탭 → Token 복사 (Reset Token)"
+  echo -e "     ${BLUE}→ 이것이 DISCORD_BOT_TOKEN${NC}"
+  echo -e "  ${BOLD}3.${NC} Privileged Gateway Intents:"
+  echo -e "     Message Content Intent → ON"
+  echo -e "  ${BOLD}4.${NC} OAuth2 → URL Generator:"
+  echo -e "     Scopes: bot"
+  echo -e "     Permissions: Send Messages, Read Messages, Read Message History"
+  echo -e "  ${BOLD}5.${NC} 생성된 URL 접속 → 서버에 봇 초대"
+  echo -e "  ${BOLD}6.${NC} 서버 ID: Discord 설정 → 고급 → 개발자 모드 ON"
+  echo -e "     서버 이름 우클릭 → 서버 ID 복사"
+  echo -e "     ${BLUE}→ 이것이 DISCORD_GUILD_ID${NC}"
+  echo ""
+  printf "  준비됐으면 Enter 눌러 계속..."; IFS= read -r _
+}
+
+guide_telegram() {
+  guide_box "Telegram Bot 설정 가이드"
+  echo -e "  ${BOLD}1.${NC} Telegram에서 @BotFather 검색 → 대화 시작"
+  echo -e "     ${BLUE}https://t.me/botfather${NC}"
+  echo -e "  ${BOLD}2.${NC} /newbot 입력"
+  echo -e "  ${BOLD}3.${NC} 봇 표시 이름 입력 (예: My Assistant)"
+  echo -e "  ${BOLD}4.${NC} 봇 username 입력 (예: myassistant_bot)  ← _bot으로 끝나야 함"
+  echo -e "  ${BOLD}5.${NC} 발급된 토큰 복사 (예: 123456789:ABCdef...)"
+  echo -e "     ${BLUE}→ 이것이 TELEGRAM_BOT_TOKEN${NC}"
+  echo -e "  ${BOLD}6.${NC} 내 User ID 확인: @userinfobot 에게 아무 메시지 전송"
+  echo -e "     ${BLUE}→ 이것이 TELEGRAM_ALLOWED_USERS${NC}"
+  echo ""
+  printf "  준비됐으면 Enter 눌러 계속..."; IFS= read -r _
+}
+
+guide_github_webhook() {
+  guide_box "GitHub Webhook 설정 가이드"
+  echo -e "  ${BOLD}1.${NC} GitHub → Settings → Developer settings → Personal access tokens"
+  echo -e "     → Generate new token (classic)"
+  echo -e "     Scopes: repo, read:org"
+  echo -e "     ${BLUE}→ 이것이 GH_TOKEN${NC}"
+  echo -e "  ${BOLD}2.${NC} Webhook Secret: 임의의 랜덤 문자열 생성"
+  echo -e "     ${BLUE}openssl rand -hex 32${NC}"
+  echo -e "     ${BLUE}→ 이것이 GITHUB_WEBHOOK_SECRET${NC}"
+  echo -e "  ${BOLD}3.${NC} 서버 시작 후 GitHub repo → Settings → Webhooks:"
+  echo -e "     Payload URL: http://YOUR_SERVER:PORT/webhooks/..."
+  echo -e "     Secret: 위에서 생성한 값"
+  echo -e "     Events: Pull requests, Issues"
+  echo ""
+  printf "  준비됐으면 Enter 눌러 계속..."; IFS= read -r _
+}
+
 # ── Step 3: Messaging Platform ────────────────────────────────────────────────
 collect_platforms() {
   print_step 3 "Messaging platform (at least one required)"
@@ -146,22 +225,25 @@ collect_platforms() {
   fi
 
   if [[ "$USE_SLACK" == "true" ]]; then
-    echo ""; info "Slack credentials:"
+    guide_slack
+    echo -e "  ${BOLD}Slack credentials:${NC}"
     ask_secret "  SLACK_BOT_TOKEN (xoxb-...)" SLACK_BOT_TOKEN
     ask_secret "  SLACK_APP_TOKEN (xapp-...)" SLACK_APP_TOKEN
-    ask "  SLACK_ALLOWED_USERS (comma-separated user IDs)" "" SLACK_ALLOWED_USERS
+    ask "  SLACK_ALLOWED_USERS (쉼표 구분 User ID)" "" SLACK_ALLOWED_USERS
   fi
 
   if [[ "$USE_DISCORD" == "true" ]]; then
-    echo ""; info "Discord credentials:"
+    guide_discord
+    echo -e "  ${BOLD}Discord credentials:${NC}"
     ask_secret "  DISCORD_BOT_TOKEN" DISCORD_BOT_TOKEN
     ask "  DISCORD_GUILD_ID" "" DISCORD_GUILD_ID
   fi
 
   if [[ "$USE_TELEGRAM" == "true" ]]; then
-    echo ""; info "Telegram credentials:"
+    guide_telegram
+    echo -e "  ${BOLD}Telegram credentials:${NC}"
     ask_secret "  TELEGRAM_BOT_TOKEN" TELEGRAM_BOT_TOKEN
-    ask "  TELEGRAM_ALLOWED_USERS (comma-separated, optional)" "" TELEGRAM_ALLOWED_USERS
+    ask "  TELEGRAM_ALLOWED_USERS (쉼표 구분 User ID, 선택)" "" TELEGRAM_ALLOWED_USERS
   fi
 }
 
@@ -172,6 +254,8 @@ collect_integrations() {
   ask_yn "Enable GitHub webhook (PR reviewer, issue automation)?" USE_GITHUB_WEBHOOK
 
   if [[ "$USE_GITHUB_WEBHOOK" == "true" ]]; then
+    guide_github_webhook
+    echo -e "  ${BOLD}GitHub webhook credentials:${NC}"
     ask "  Webhook port" "8644" WEBHOOK_PORT
     ask_secret "  GITHUB_WEBHOOK_SECRET" GITHUB_WEBHOOK_SECRET
     ask_secret "  GH_TOKEN (GitHub personal access token)" GH_TOKEN
