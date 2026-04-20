@@ -261,7 +261,7 @@ collect_agent_info() {
     warn "Directory already exists: $OUTPUT_DIR"
     local overwrite
     ask_yn "Overwrite?" overwrite
-    [[ "$overwrite" != "true" ]] && exit 1
+    if [[ "$overwrite" != "true" ]]; then exit 1; fi
     rm -rf "$OUTPUT_DIR"
   fi
 }
@@ -357,7 +357,7 @@ show_summary() {
   echo ""
   local confirm
   ask_yn "계속 진행할까요?" confirm
-  [[ "$confirm" != "true" ]] && { echo "Aborted."; exit 0; }
+  if [[ "$confirm" != "true" ]]; then echo "Aborted."; exit 0; fi
 }
 
 # ── Step 8: Generate Files ─────────────────────────────────────────────────────
