@@ -58,8 +58,26 @@ port_in_use() {
   ss -tlnp 2>/dev/null | awk '{print $4}' | grep -q ":${1}$" 2>/dev/null
 }
 
+# Show port availability around default, then ask user to pick one
 ask_port() {
   local prompt="$1" default="$2" var_name="$3"
+  local scan_start=$(( default - 2 )) scan_end=$(( default + 7 ))
+
+  echo ""
+  echo -e "  ${DIM}포트 사용 현황 (${scan_start}–${scan_end}):${NC}"
+  for p in $(seq "$scan_start" "$scan_end"); do
+    if port_in_use "$p"; then
+      local proc
+      proc=$(ss -tlnp 2>/dev/null | awk -v port=":${p} " '$4 ~ port {gsub(/.*\"/, ""); gsub(/".*/, ""); print $NF}' | head -1)
+      echo -e "    ${RED}✗${NC} ${p}  사용 중${proc:+  (${proc})}"
+    else
+      [[ "$p" == "$default" ]] \
+        && echo -e "    ${GREEN}✓${NC} ${p}  사용 가능  ${DIM}← 기본값${NC}" \
+        || echo -e "    ${GREEN}✓${NC} ${p}  사용 가능"
+    fi
+  done
+  echo ""
+
   while true; do
     ask "$prompt" "$default" "$var_name"
     local port="${!var_name}"
@@ -67,15 +85,9 @@ ask_port() {
       warn "유효하지 않은 포트입니다. 1024–65535 범위로 입력해주세요."; continue
     fi
     if port_in_use "$port"; then
-      warn "포트 ${port}가 이미 사용 중입니다."
-      echo -e "     ${DIM}현재 사용 중인 프로세스:${NC}"
-      ss -tlnp 2>/dev/null | awk -v p=":${port}" '$4 ~ p {print "     " $0}' | head -3
-      echo -e "     ${DIM}다른 포트를 입력하거나 Enter로 그대로 사용:${NC}"
-      local override
-      ask_yn "  이 포트를 그대로 사용할까요?" override
-      [[ "$override" == "true" ]] && break
+      warn "포트 ${port}는 사용 중입니다. 다른 포트를 입력해주세요."
     else
-      ok "포트 ${port} 사용 가능"
+      ok "포트 ${port} 선택됨"
       break
     fi
   done
