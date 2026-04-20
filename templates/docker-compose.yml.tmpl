@@ -3,6 +3,7 @@ services:
     image: nousresearch/hermes-agent:latest
     container_name: {{AGENT_NAME}}
     restart: unless-stopped
+    command: ["gateway"]
 
     environment:
       HERMES_HOME: /opt/data
