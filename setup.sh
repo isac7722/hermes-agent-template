@@ -30,11 +30,15 @@ ask() {
   local prompt="$1" default="${2:-}" var_name="$3" input
   if [[ -n "$default" ]]; then
     printf "%b%s%b [%s]: " "${BOLD}" "$prompt" "${NC}" "$default"
-    IFS= read -r input
+    read -r input
+    input="${input#"${input%%[![:space:]]*}"}"  # ltrim
+    input="${input%"${input##*[![:space:]]}"}"  # rtrim
     printf -v "$var_name" '%s' "${input:-$default}"
   else
     printf "%b%s%b: " "${BOLD}" "$prompt" "${NC}"
-    IFS= read -r input
+    read -r input
+    input="${input#"${input%%[![:space:]]*}"}"
+    input="${input%"${input##*[![:space:]]}"}"
     printf -v "$var_name" '%s' "$input"
   fi
 }
