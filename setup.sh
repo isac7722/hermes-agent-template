@@ -5,6 +5,17 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATE_DIR="${SCRIPT_DIR}/templates"
 DOCS_DIR="${SCRIPT_DIR}/docs"
 
+# When run via curl (bash <(curl ...)), BASH_SOURCE[0] is /dev/stdin — templates/ won't exist.
+# In that case, clone the repo to a temp dir and use templates from there.
+if [[ ! -d "$TEMPLATE_DIR" ]]; then
+  _CLONE_DIR="/tmp/hermes-agent-template-$$"
+  echo "Downloading template files..."
+  git clone --depth=1 --quiet https://github.com/isac7722/hermes-agent-template.git "$_CLONE_DIR"
+  trap 'rm -rf "$_CLONE_DIR"' EXIT
+  TEMPLATE_DIR="${_CLONE_DIR}/templates"
+  DOCS_DIR="${_CLONE_DIR}/docs"
+fi
+
 # ── Colors ────────────────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 BLUE='\033[0;34m'; BOLD='\033[1m'; NC='\033[0m'

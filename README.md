@@ -29,8 +29,16 @@ A `.env` file with your secrets is also generated locally (gitignored) for you t
 
 ## Usage
 
+**원라이너 (권장):**
+
 ```bash
-git clone https://github.com/aptimizer-co/hermes-agent-template.git
+bash <(curl -fsSL https://raw.githubusercontent.com/isac7722/hermes-agent-template/main/setup.sh)
+```
+
+또는 직접 clone 후 실행:
+
+```bash
+git clone https://github.com/isac7722/hermes-agent-template.git
 cd hermes-agent-template
 bash setup.sh
 ```
