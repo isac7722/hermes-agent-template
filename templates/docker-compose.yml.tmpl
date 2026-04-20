@@ -1,0 +1,43 @@
+services:
+  {{AGENT_NAME}}:
+    image: nousresearch/hermes-agent:latest
+    container_name: {{AGENT_NAME}}
+    restart: unless-stopped
+
+    environment:
+      HERMES_HOME: /opt/data
+
+    env_file:
+      - /opt/{{AGENT_NAME}}-config/.env
+
+    volumes:
+      # Runtime data: state.db, sessions, pipeline, cache — persisted across restarts
+      - {{AGENT_NAME}}_data:/opt/data
+      # Config files from git repo — bind mount overwrites named volume paths
+      - /opt/{{AGENT_NAME}}-config/config.yaml:/opt/data/config.yaml:ro
+      - /opt/{{AGENT_NAME}}-config/SOUL.md:/opt/data/SOUL.md:ro
+      - /opt/{{AGENT_NAME}}-config/skills:/opt/data/skills
+      - /opt/{{AGENT_NAME}}-config/memories:/opt/data/memories
+      - /opt/{{AGENT_NAME}}-config/.env:/opt/data/.env:ro
+
+    # ###BEGIN_GITHUB_WEBHOOK###
+    ports:
+      - "{{WEBHOOK_PORT}}:{{WEBHOOK_PORT}}"
+    # ###END_GITHUB_WEBHOOK###
+
+    healthcheck:
+      test: ["CMD", "python3", "-c",
+             "import os; exit(0 if os.path.exists('/opt/data/config.yaml') else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+volumes:
+  {{AGENT_NAME}}_data:

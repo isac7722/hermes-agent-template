@@ -1,0 +1,65 @@
+model:
+  default: claude-sonnet-4-6
+  provider: anthropic
+
+providers: {}
+fallback_providers: []
+
+agent:
+  max_turns: 90
+  gateway_timeout: 1800
+  tool_use_enforcement: auto
+
+display:
+  compact: false
+  show_cost: false
+  show_reasoning: false
+  streaming: false
+  inline_diffs: true
+
+memory:
+  memory_enabled: true
+  memory_char_limit: 2200
+  user_char_limit: 1375
+
+context:
+  engine: compressor
+
+security:
+  redact_secrets: true
+  tirith_enabled: true
+  tirith_timeout: 5
+  tirith_fail_open: true
+
+approvals:
+  mode: "off"
+
+# ###BEGIN_SLACK###
+slack:
+  channel_prompts: {}
+# ###END_SLACK###
+
+# ###BEGIN_DISCORD###
+discord:
+  require_mention: true
+  auto_thread: true
+  reactions: true
+# ###END_DISCORD###
+
+# ###BEGIN_TELEGRAM###
+telegram: {}
+# ###END_TELEGRAM###
+
+# ###BEGIN_GITHUB_WEBHOOK###
+webhook:
+  host: 0.0.0.0
+  port: {{WEBHOOK_PORT}}
+  routes:
+    - event: pr_opened
+      skill: reviewer
+    - event: issue_created
+      skill: coder
+# ###END_GITHUB_WEBHOOK###
+
+toolsets:
+  - hermes-cli

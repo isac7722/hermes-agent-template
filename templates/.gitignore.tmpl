@@ -1,0 +1,31 @@
+# Secrets — never commit
+.env
+
+# Hermes runtime state (use Docker named volume instead)
+state.db
+state.db-shm
+state.db-wal
+pipeline_state.db
+sessions/
+cache/
+logs/
+pipeline/
+
+# Hermes internal files
+gateway.pid
+gateway_state.json
+channel_directory.json
+auth.json
+auth.lock
+.update_check
+models_dev_cache.json
+.skills_prompt_snapshot.json
+webhook_subscriptions.json
+bin/
+platforms/
+sandboxes/
+cron/output/
+
+# OS
+.DS_Store
+Thumbs.db
