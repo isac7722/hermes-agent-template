@@ -17,11 +17,14 @@ jobs:
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT }}
+          envs: GH_TOKEN
           script: |
             set -e
             CONFIG_DIR="/opt/{{AGENT_NAME}}-config"
@@ -32,7 +35,7 @@ jobs:
             else
               sudo mkdir -p "$CONFIG_DIR"
               sudo chown "$USER:$USER" "$CONFIG_DIR"
-              git clone "${{ github.server_url }}/${{ github.repository }}.git" "$CONFIG_DIR"
+              git clone "https://${GH_TOKEN}@github.com/{{GH_ORG}}/{{AGENT_NAME}}-config.git" "$CONFIG_DIR"
             fi
             cd "$CONFIG_DIR"
 
