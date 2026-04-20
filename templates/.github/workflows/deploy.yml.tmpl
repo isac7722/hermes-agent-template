@@ -24,10 +24,17 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             set -e
+            CONFIG_DIR="/opt/{{AGENT_NAME}}-config"
 
-            echo "=== [1/4] Pulling latest config ==="
-            cd /opt/{{AGENT_NAME}}-config
-            git pull origin main
+            echo "=== [1/4] Syncing config ==="
+            if [ -d "$CONFIG_DIR/.git" ]; then
+              cd "$CONFIG_DIR" && git pull origin main
+            else
+              sudo mkdir -p "$CONFIG_DIR"
+              sudo chown "$USER:$USER" "$CONFIG_DIR"
+              git clone "${{ github.server_url }}/${{ github.repository }}.git" "$CONFIG_DIR"
+            fi
+            cd "$CONFIG_DIR"
 
             echo "=== [2/4] Pulling latest Hermes image ==="
             docker compose pull
