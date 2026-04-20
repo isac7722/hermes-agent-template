@@ -58,25 +58,22 @@ port_in_use() {
   ss -tlnp 2>/dev/null | awk '{print $4}' | grep -q ":${1}$" 2>/dev/null
 }
 
-# Show port availability around default, then ask user to pick one
+# Check default port; if in use suggest nearby free ports, then ask
 ask_port() {
   local prompt="$1" default="$2" var_name="$3"
-  local scan_start=$(( default - 2 )) scan_end=$(( default + 7 ))
 
-  echo ""
-  echo -e "  ${DIM}포트 사용 현황 (${scan_start}–${scan_end}):${NC}"
-  for p in $(seq "$scan_start" "$scan_end"); do
-    if port_in_use "$p"; then
-      local proc
-      proc=$(ss -tlnp 2>/dev/null | awk -v port=":${p} " '$4 ~ port {gsub(/.*\"/, ""); gsub(/".*/, ""); print $NF}' | head -1)
-      echo -e "    ${RED}✗${NC} ${p}  사용 중${proc:+  (${proc})}"
-    else
-      [[ "$p" == "$default" ]] \
-        && echo -e "    ${GREEN}✓${NC} ${p}  사용 가능  ${DIM}← 기본값${NC}" \
-        || echo -e "    ${GREEN}✓${NC} ${p}  사용 가능"
-    fi
-  done
-  echo ""
+  if port_in_use "$default"; then
+    warn "기본 포트 ${default}가 사용 중입니다."
+    local suggestions=()
+    for p in $(seq $(( default + 1 )) $(( default + 20 ))); do
+      port_in_use "$p" || { suggestions+=("$p"); [[ ${#suggestions[@]} -ge 3 ]] && break; }
+    done
+    [[ ${#suggestions[@]} -gt 0 ]] && \
+      info "사용 가능한 포트: ${suggestions[*]}"
+    default="${suggestions[0]:-$(( default + 1 ))}"
+  else
+    ok "기본 포트 ${default} 사용 가능"
+  fi
 
   while true; do
     ask "$prompt" "$default" "$var_name"
